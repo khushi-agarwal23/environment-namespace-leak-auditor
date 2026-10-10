@@ -19,9 +19,9 @@ int main(void) {
     printf("Parent PID: %ld\n", (long)getpid());
     fflush(stdout);
 
-    int failures = 0;
+    int passed = 0;
 
-    for (int test = 1; test <= 3; test++) {
+    for (int test = 1; test <= 4; test++) {
         pid_t pid = fork();
 
         if (pid < 0) {
@@ -42,6 +42,10 @@ int main(void) {
                 "./inspector", "API_TOKEN", "A", NULL
             };
 
+            char *args4[] = {
+                "./inspector", "DEMO_MODE", "A", NULL
+            };
+
             char *clean_env[] = {
                 "DEMO_MODE=sanitized", NULL
             };
@@ -52,7 +56,8 @@ int main(void) {
             }
 
             char **args = test == 1 ? args1 :
-                          test == 2 ? args2 : args3;
+                          test == 2 ? args2 :
+                          test == 3 ? args3 : args4;
 
             char **env = test == 3 ? clean_env : environ;
 
@@ -69,12 +74,30 @@ int main(void) {
             return 1;
         }
 
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-            failures++;
+        if (!WIFEXITED(status)) {
+            printf("TEST %d FAIL: child terminated abnormally\n", test);
+            continue;
+        }
+
+        int exit_code = WEXITSTATUS(status);
+
+        if (test == 4) {
+            if (exit_code == 1) {
+                printf("TEST 4 PASS: inspector detected expected mismatch\n");
+                passed++;
+            } else {
+                printf("TEST 4 FAIL: expected exit status 1, got %d\n",
+                       exit_code);
+            }
+        } else if (exit_code == 0) {
+            passed++;
+        } else {
+            printf("TEST %d FAIL: inspector exited with status %d\n",
+                   test, exit_code);
         }
     }
 
-    printf("\nAudit summary: %d/3 tests passed\n", 3 - failures);
+    printf("\nAudit summary: %d/4 tests passed\n", passed);
 
-    return failures == 0 ? 0 : 1;
+    return passed == 4 ? 0 : 1;
 }
