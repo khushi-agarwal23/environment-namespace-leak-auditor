@@ -53,3 +53,7 @@ dkms.conf
 
 # debug information files
 *.dwo
+# Compiled C binaries
+/auditor
+/inspector
+*.o
