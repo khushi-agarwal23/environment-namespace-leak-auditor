@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 extern char **environ;
 
@@ -21,7 +22,7 @@ int main(void) {
 
     int passed = 0;
 
-    for (int test = 1; test <= 4; test++) {
+    for (int test = 1; test <= 5; test++) {
         pid_t pid = fork();
 
         if (pid < 0) {
@@ -30,6 +31,22 @@ int main(void) {
         }
 
         if (pid == 0) {
+            if (test == 5) {
+                char *args[] = {
+                    "./nonexistent-inspector", NULL
+                };
+
+                execve(args[0], args, environ);
+
+                if (errno == ENOENT) {
+                    perror("execve expected failure");
+                    _exit(42);
+                }
+
+                perror("execve unexpected error");
+                _exit(127);
+            }
+
             char *args1[] = {
                 "./inspector", "DEMO_MODE", "P", NULL
             };
@@ -81,7 +98,15 @@ int main(void) {
 
         int exit_code = WEXITSTATUS(status);
 
-        if (test == 4) {
+        if (test == 5) {
+            if (exit_code == 42) {
+                printf("TEST 5 PASS: missing executable handled correctly\n");
+                passed++;
+            } else {
+                printf("TEST 5 FAIL: expected exit status 42, got %d\n",
+                       exit_code);
+            }
+        } else if (test == 4) {
             if (exit_code == 1) {
                 printf("TEST 4 PASS: inspector detected expected mismatch\n");
                 passed++;
@@ -90,6 +115,7 @@ int main(void) {
                        exit_code);
             }
         } else if (exit_code == 0) {
+            printf("TEST %d PASS\n", test);
             passed++;
         } else {
             printf("TEST %d FAIL: inspector exited with status %d\n",
@@ -97,7 +123,7 @@ int main(void) {
         }
     }
 
-    printf("\nAudit summary: %d/4 tests passed\n", passed);
+    printf("\nAudit summary: %d/5 tests passed\n", passed);
 
-    return passed == 4 ? 0 : 1;
+    return passed == 5 ? 0 : 1;
 }
