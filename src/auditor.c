@@ -8,10 +8,17 @@
 
 extern char **environ;
 
+static int run_inspector(char *const args[], char *const env[]) {
+    execve("./inspector", args, env);
+    perror("execve");
+    _exit(127);
+}
+
 int main(void) {
     if (setenv("DEMO_MODE", "test", 1) == -1 ||
         setenv("DEMO_SECRET", "dummy123", 1) == -1 ||
-        setenv("API_TOKEN", "dummy-token", 1) == -1) {
+        setenv("API_TOKEN", "dummy-token", 1) == -1 ||
+        setenv("UNRELATED_VAR", "should-not-inherit", 1) == -1) {
         perror("setenv");
         return 1;
     }
@@ -22,7 +29,7 @@ int main(void) {
 
     int passed = 0;
 
-    for (int test = 1; test <= 5; test++) {
+    for (int test = 1; test <= 8; test++) {
         pid_t pid = fork();
 
         if (pid < 0) {
@@ -31,12 +38,41 @@ int main(void) {
         }
 
         if (pid == 0) {
-            if (test == 5) {
-                char *args[] = {
-                    "./nonexistent-inspector", NULL
-                };
+            char *args1[] = {"./inspector", "DEMO_MODE", "P", NULL};
+            char *args2[] = {"./inspector", "DEMO_SECRET", "A", NULL};
+            char *args3[] = {"./inspector", "API_TOKEN", "A", NULL};
+            char *args4[] = {"./inspector", "DEMO_MODE", "A", NULL};
+            char *args5[] = {
+                "./inspector", "--equals", "DEMO_MODE", "sanitized", NULL
+            };
+            char *args6[] = {
+                "./inspector", "--absent", "UNRELATED_VAR", NULL
+            };
+            char *args7[] = {
+                "./inspector", "--absent", "DEMO_SECRET", NULL
+            };
+            char *args8[] = {
+                "./nonexistent-inspector", NULL
+            };
 
-                execve(args[0], args, environ);
+            char *clean_env[] = {"DEMO_MODE=sanitized", NULL};
+            char *empty_env[] = {NULL};
+
+            if (test == 2 && unsetenv("DEMO_SECRET") == -1) {
+                perror("unsetenv");
+                _exit(2);
+            }
+
+            if (test == 3) {
+                run_inspector(args3, clean_env);
+            } else if (test == 5) {
+                run_inspector(args5, clean_env);
+            } else if (test == 6) {
+                run_inspector(args6, empty_env);
+            } else if (test == 7) {
+                run_inspector(args7, clean_env);
+            } else if (test == 8) {
+                execve(args8[0], args8, environ);
 
                 if (errno == ENOENT) {
                     perror("execve expected failure");
@@ -45,43 +81,11 @@ int main(void) {
 
                 perror("execve unexpected error");
                 _exit(127);
+            } else {
+                char **args = test == 1 ? args1 :
+                              test == 2 ? args2 : args4;
+                run_inspector(args, environ);
             }
-
-            char *args1[] = {
-                "./inspector", "DEMO_MODE", "P", NULL
-            };
-
-            char *args2[] = {
-                "./inspector", "DEMO_SECRET", "A", NULL
-            };
-
-            char *args3[] = {
-                "./inspector", "API_TOKEN", "A", NULL
-            };
-
-            char *args4[] = {
-                "./inspector", "DEMO_MODE", "A", NULL
-            };
-
-            char *clean_env[] = {
-                "DEMO_MODE=sanitized", NULL
-            };
-
-            if (test == 2 && unsetenv("DEMO_SECRET") == -1) {
-                perror("unsetenv");
-                _exit(2);
-            }
-
-            char **args = test == 1 ? args1 :
-                          test == 2 ? args2 :
-                          test == 3 ? args3 : args4;
-
-            char **env = test == 3 ? clean_env : environ;
-
-            execve("./inspector", args, env);
-
-            perror("execve");
-            _exit(127);
         }
 
         int status;
@@ -91,39 +95,19 @@ int main(void) {
             return 1;
         }
 
-        if (!WIFEXITED(status)) {
-            printf("TEST %d FAIL: child terminated abnormally\n", test);
-            continue;
-        }
+        int expected = (test == 4) ? 1 : (test == 8) ? 42 : 0;
 
-        int exit_code = WEXITSTATUS(status);
-
-        if (test == 5) {
-            if (exit_code == 42) {
-                printf("TEST 5 PASS: missing executable handled correctly\n");
-                passed++;
-            } else {
-                printf("TEST 5 FAIL: expected exit status 42, got %d\n",
-                       exit_code);
-            }
-        } else if (test == 4) {
-            if (exit_code == 1) {
-                printf("TEST 4 PASS: inspector detected expected mismatch\n");
-                passed++;
-            } else {
-                printf("TEST 4 FAIL: expected exit status 1, got %d\n",
-                       exit_code);
-            }
-        } else if (exit_code == 0) {
+        if (WIFEXITED(status) && WEXITSTATUS(status) == expected) {
             printf("TEST %d PASS\n", test);
             passed++;
+        } else if (WIFEXITED(status)) {
+            printf("TEST %d FAIL: expected exit %d, got %d\n",
+                   test, expected, WEXITSTATUS(status));
         } else {
-            printf("TEST %d FAIL: inspector exited with status %d\n",
-                   test, exit_code);
+            printf("TEST %d FAIL: child terminated abnormally\n", test);
         }
     }
 
-    printf("\nAudit summary: %d/5 tests passed\n", passed);
-
-    return passed == 5 ? 0 : 1;
+    printf("\nAudit summary: %d/8 tests passed\n", passed);
+    return passed == 8 ? 0 : 1;
 }

@@ -37,19 +37,19 @@ static int scan_sensitive_variables(void) {
             continue;
         }
 
-        size_t name_length = (size_t)(equals - *entry);
+        size_t length = (size_t)(equals - *entry);
 
-        if (name_length == 0 || name_length >= 256) {
+        if (length == 0 || length >= 256) {
             continue;
         }
 
         char name[256];
-        memcpy(name, *entry, name_length);
-        name[name_length] = '\0';
+        memcpy(name, *entry, length);
+        name[length] = '\0';
 
         if (is_sensitive_name(name)) {
-            printf("WARNING: Potentially sensitive variable: %s [value redacted]\n",
-                   name);
+            printf("WARNING: Potentially sensitive variable: %s "
+                   "[value redacted]\n", name);
             found++;
         }
     }
@@ -67,9 +67,39 @@ int main(int argc, char *argv[]) {
         return scan_sensitive_variables();
     }
 
+    if (argc == 4 && strcmp(argv[1], "--equals") == 0) {
+        const char *actual = getenv(argv[2]);
+
+        printf("Inspector PID: %ld\n", (long)getpid());
+
+        if (actual != NULL && strcmp(actual, argv[3]) == 0) {
+            printf("PASS: %s matches expected value\n", argv[2]);
+            return 0;
+        }
+
+        printf("FAIL: %s does not match expected value\n", argv[2]);
+        return 1;
+    }
+
+    if (argc == 3 && strcmp(argv[1], "--absent") == 0) {
+        const char *actual = getenv(argv[2]);
+
+        printf("Inspector PID: %ld\n", (long)getpid());
+
+        if (actual == NULL) {
+            printf("PASS: %s is absent\n", argv[2]);
+            return 0;
+        }
+
+        printf("FAIL: %s is present but should be absent\n", argv[2]);
+        return 1;
+    }
+
     if (argc != 3) {
         fprintf(stderr,
-                "Usage: inspector VARIABLE EXPECTED\n"
+                "Usage: inspector VARIABLE P|A\n"
+                "       inspector --equals VARIABLE VALUE\n"
+                "       inspector --absent VARIABLE\n"
                 "       inspector --scan-sensitive\n");
         return 2;
     }
