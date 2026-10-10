@@ -57,4 +57,5 @@ dkms.conf
 /auditor
 /inspector
 /namespace_auditor
+/namespace_compare
 *.o
