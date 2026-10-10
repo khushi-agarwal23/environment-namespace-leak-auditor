@@ -67,6 +67,43 @@ int main(int argc, char *argv[]) {
         return scan_sensitive_variables();
     }
 
+    if (argc == 2 && strcmp(argv[1], "--expect-empty") == 0) {
+        printf("Inspector PID: %ld\n", (long)getpid());
+
+        if (environ == NULL || environ[0] == NULL) {
+            printf("PASS: environment is empty\n");
+            return 0;
+        }
+
+        printf("FAIL: environment contains unexpected variables\n");
+        return 1;
+    }
+
+    if (argc == 4 && strcmp(argv[1], "--expect-only") == 0) {
+        const char *name = argv[2];
+        const char *expected = argv[3];
+        int count = 0;
+        const char *actual = getenv(name);
+
+        for (char **entry = environ; entry != NULL && *entry != NULL;
+             entry++) {
+            count++;
+        }
+
+        printf("Inspector PID: %ld\n", (long)getpid());
+
+        if (count == 1 && actual != NULL &&
+            strcmp(actual, expected) == 0) {
+            printf("PASS: environment contains only %s with expected value\n",
+                   name);
+            return 0;
+        }
+
+        printf("FAIL: environment does not contain exactly the expected "
+               "variable\n");
+        return 1;
+    }
+
     if (argc == 4 && strcmp(argv[1], "--equals") == 0) {
         const char *actual = getenv(argv[2]);
 
@@ -100,6 +137,8 @@ int main(int argc, char *argv[]) {
                 "Usage: inspector VARIABLE P|A\n"
                 "       inspector --equals VARIABLE VALUE\n"
                 "       inspector --absent VARIABLE\n"
+                "       inspector --expect-only VARIABLE VALUE\n"
+                "       inspector --expect-empty\n"
                 "       inspector --scan-sensitive\n");
         return 2;
     }
