@@ -2,12 +2,12 @@
 
 **Project Title**: Environment Variable & Namespace Leak Auditor  
 **Evaluation Lead**: Member 3 (Integration, Reporting, and Evaluation)  
-**Measurement Date**: 2026-10-14 13:24:56  
+**Measurement Date**: 2026-10-14 16:41:46  
 
 ## 1. Experimental Setup
 
-- **Operating System**: Darwin 24.6.0 (arm64)
-- **Kernel/Architecture**: macOS-15.7.4-arm64-arm-64bit-Mach-O
+- **Operating System**: Linux 6.18.54.1-microsoft-standard-WSL2 (x86_64)
+- **Kernel/Architecture**: Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.43
 - **Compiler**: GCC / Clang with `-Wall -Wextra -std=c11 -pedantic -O2`
 - **Timing Method**: High-resolution monotonic clock (`time.perf_counter()`, sub-microsecond precision)
 - **Operating System Context**: Process creation and address space allocation via `fork()`, image replacement via `execve()`, and process synchronization via `waitpid()`
@@ -17,37 +17,43 @@
 | Metric | Measured Value (ms) |
 | :--- | :--- |
 | **Sample Size (Trials)** | 50 |
-| **Mean Latency** | **10.79 ms** |
-| **Median Latency** | 10.71 ms |
-| **Standard Deviation** | ±0.38 ms |
-| **Minimum Latency** | 10.41 ms |
-| **Maximum Latency** | 12.93 ms |
-| **95th Percentile (p95)** | 11.23 ms |
+| **Mean Latency** | **6.05 ms** |
+| **Median Latency** | 5.33 ms |
+| **Standard Deviation** | ±1.65 ms |
+| **Minimum Latency** | 4.48 ms |
+| **Maximum Latency** | 12.22 ms |
+| **95th Percentile (p95)** | 9.88 ms |
 
 ## 3. Subsystem Execution Breakdown (30 Trials Each)
 
 | Subsystem / Pipeline Stage | Mean (ms) | Median (ms) | Std Dev (ms) | Min (ms) | Max (ms) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Process/Env Engine** | 10.70 | 10.69 | ±0.29 | 10.11 | 11.35 |
-| **Namespace Inspector** | 1.80 | 1.66 | ±0.52 | 1.59 | 4.45 |
-| **Security Scanner** | 1.68 | 1.64 | ±0.11 | 1.56 | 1.97 |
-| **JSON Formatting** | 10.76 | 10.74 | ±0.21 | 10.46 | 11.51 |
-| **CSV Formatting** | 10.68 | 10.63 | ±0.24 | 10.41 | 11.63 |
-| **Full Unified Audit** | 10.74 | 10.71 | ±0.26 | 10.26 | 11.45 |
+| **Process/Env Engine** | 4.98 | 4.87 | ±0.43 | 4.48 | 6.60 |
+| **Namespace Inspector** | 0.84 | 0.81 | ±0.14 | 0.66 | 1.24 |
+| **Security Scanner** | 0.78 | 0.73 | ±0.18 | 0.62 | 1.55 |
+| **JSON Formatting** | 5.30 | 5.11 | ±0.66 | 4.59 | 7.14 |
+| **CSV Formatting** | 5.15 | 5.03 | ±0.51 | 4.51 | 6.64 |
+| **Full Unified Audit** | 6.74 | 6.48 | ±1.20 | 4.97 | 10.56 |
 
 ## 4. Environment Scaling Performance
 
 | Variable Count | Mean Latency (ms) | Std Dev (ms) | Min (ms) | Max (ms) |
 | :--- | :--- | :--- | :--- | :--- |
-| **10 variables** | 2.38 | ±1.22 | 1.61 | 4.98 |
-| **50 variables** | 1.82 | ±0.17 | 1.62 | 2.21 |
-| **100 variables** | 1.80 | ±0.11 | 1.67 | 2.08 |
-| **250 variables** | 1.85 | ±0.10 | 1.73 | 2.04 |
-| **500 variables** | 2.03 | ±0.15 | 1.87 | 2.45 |
-| **1000 variables** | 2.25 | ±0.11 | 2.09 | 2.51 |
+| **10 variables** | 1.01 | ±0.32 | 0.78 | 1.85 |
+| **50 variables** | 1.19 | ±0.36 | 0.80 | 1.89 |
+| **100 variables** | 1.02 | ±0.34 | 0.70 | 2.36 |
+| **250 variables** | 1.09 | ±0.27 | 0.88 | 2.09 |
+| **500 variables** | 1.42 | ±0.36 | 1.08 | 2.16 |
+| **1000 variables** | 1.67 | ±0.19 | 1.42 | 2.04 |
 
 ## 5. Architectural Observations & OS Analysis
 
-1. **Process Creation Cost Dominance**: Over 85% of total execution time in the complete audit is spent within `fork()` and `execve()`. Each test requires creating a new process control block (PCB), duplicating or copy-on-write sharing page tables, wiping virtual memory during `execve()`, and scheduling child execution.
-2. **In-Memory Subsystem Efficiency**: Namespace path inspection and security substring scanning operate at microsecond scale per entity. Even when scaling to 1,000 environment variables, the security scan completes within a single-digit millisecond timeframe.
-3. **Formatting Overhead**: Structured JSON and CSV serialization overhead is negligible (< 1 ms difference compared to text mode), demonstrating that streaming data structures in memory is computationally trivial compared to OS kernel context switches.
+1. **Process and Environment Processing:** The Process/Env Engine recorded a mean execution time of 4.98 ms across 30 trials. Process creation with `fork()`, program replacement with `execve()`, and child-process synchronization with `waitpid()` are important operations in the environment-auditing workflow. Further profiling is needed to quantify the individual cost of each operation.
+
+2. **Namespace Inspection and Security Scanning:** The Namespace Inspector recorded a mean of 0.84 ms, while the Security Scanner recorded a mean of 0.78 ms across 30 trials each. These measurements describe the tested WSL2 environment and workload; results may differ on other systems.
+
+3. **Environment Size Scaling:** The measured mean latency increased from 1.01 ms for 10 environment variables to 1.67 ms for 1,000 variables. The intermediate measurements were not strictly monotonic, so additional repeated trials would help establish the scaling trend more reliably.
+
+4. **Structured Output:** JSON formatting recorded a mean of 5.30 ms and CSV formatting recorded a mean of 5.15 ms. These are separate benchmark measurements; without a directly comparable text-output baseline, the relative overhead of structured formatting cannot be determined from these values alone.
+
+5. **Measurement Limitations:** The benchmarks were conducted on Linux under WSL2 using the recorded software environment. The results provide an initial performance evaluation rather than a universal performance guarantee. Repeated measurements, controlled workloads, and finer-grained profiling would strengthen future evaluation.
