@@ -53,5 +53,9 @@ dkms.conf
 
 # debug information files
 *.dwo
-
-/member2
+# Compiled C binaries
+/auditor
+/inspector
+/namespace_auditor
+/namespace_compare
+*.o
