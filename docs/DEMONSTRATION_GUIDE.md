@@ -111,4 +111,4 @@ Open and display the generated PNG graphs in `docs/graphs/`:
 - `docs/graphs/benchmark_env_scaling.png` (scaling curve up to 1,000 variables)
 
 **Talking Point**:
-> *"Member 3 conducted empirical timing experiments using sub-microsecond monotonic clocks. Over 50 repeated trials, mean runtime is 10.62 ms. The graphs demonstrate that process creation (`fork` + `execve`) accounts for over 85% of total time, while in-memory security scanning scales linearly and takes only ~2 ms even with 1,000 variables."*
+> *"Member 3 conducted empirical timing experiments using sub-microsecond monotonic clocks. Over 50 repeated trials, mean full-audit runtime is 6.05 ms over 50 trials on Linux under WSL2. The 1,000-variable scan measured 1.67 ms in a separate benchmark. These are environment-specific measurements, and further controlled trials are needed to establish subsystem contributions and scaling behavior."*

@@ -133,17 +133,17 @@
 ## Slide 8: Member 3 - Empirical Performance Evaluation
 
 ### Real Empirical Measurements (50 Repeated Trials)
-- **Mean Full Audit Latency**: **10.62 ms**
-- **Median Latency**: **10.32 ms**
-- **Standard Deviation**: **±1.12 ms**
-- **Minimum Latency**: **9.75 ms**
-- **p95 Latency**: **11.69 ms**
+- **Mean Full Audit Latency**: **6.05 ms**
+- **Median Latency**: **5.33 ms**
+- **Standard Deviation**: **±1.65 ms**
+- **Minimum Latency**: **4.48 ms**
+- **p95 Latency**: **9.88 ms**
 
 ### Subsystem Breakdown:
-- **Process & Environment Engine**: **10.68 ms** (Dominates ~85% of total time due to 8 `fork() + execve()` cycles)
-- **Linux Namespace Inspector**: **1.73 ms** (`readlink()` traversal)
-- **Security Keyword Scanner**: **2.19 ms** (In-memory string scan)
-- **JSON / CSV Formatting Overhead**: **< 0.1 ms** (Negligible serialization cost)
+- **Process & Environment Engine**: **4.98 ms** (Dominates a measured mean of 4.98 ms in a separate component benchmark)
+- **Linux Namespace Inspector**: **0.84 ms** (`readlink()` traversal)
+- **Security Keyword Scanner**: **0.78 ms** (In-memory string scan)
+- **JSON / CSV Formatting Overhead**: **5.30 ms for JSON and 5.15 ms for CSV** in separate benchmark runs
 
 ---
 
@@ -153,7 +153,7 @@
 1. **Subsystem Latency Breakdown (`benchmark_component_breakdown.png`)**:
    - Clear visualization of process creation overhead vs in-memory scanning.
 2. **Environment Table Scaling (`benchmark_env_scaling.png`)**:
-   - Linear scaling \(O(N \cdot M)\) from 10 variables (1.81 ms) up to 1,000 variables (2.29 ms).
+   - Linear scaling \(O(N \cdot M)\) from 10 variables (1.01 ms) up to 1,000 variables (1.67 ms).
 3. **Trial Latency Distribution (`benchmark_execution_time.png`)**:
    - Min, Median, Mean, p95, and Max comparison confirming high stability.
 
@@ -166,7 +166,7 @@
    - `fork()` duplicates the parent address space using Copy-on-Write (COW).
    - `execve()` deallocates existing pages and constructs a new stack frame initialized with the provided `char *const envp[]`.
 2. **Cost of Process Creation**:
-   - Creating 8 processes (`fork` + `exec` + `wait`) requires ~10 ms, whereas scanning 1,000 environment variables in memory takes only ~2 ms. Kernel context switches and memory remapping are costly.
+   - Separate benchmark runs measured the Process/Env Engine at 4.98 ms and the 1,000-variable scan at 1.67 ms. These measurements are not directly additive or comparable and do not establish a percentage contribution.
 3. **Namespace Inodes**:
    - Linux namespaces are represented as virtual file links in `/proc/[PID]/ns/`. Their uniqueness is determined by kernel inode numbers.
 

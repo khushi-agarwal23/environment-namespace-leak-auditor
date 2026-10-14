@@ -91,7 +91,7 @@ A core responsibility of Member 3 is producing structured, machine-readable outp
 
 ### 3.1 JSON Export Specification (`--format json`, `-j <file>`)
 
-The JSON generator (`src/reporter.c`) implements character-level escaping for strings (`"`, `\`, control codes) and outputs standard JSON:
+The JSON generator (`src/reporter.c`) implements character-level escaping for strings (`"`, `\`, control codes) and outputs standard JSON. The following is an illustrative example, not the latest WSL2 benchmark output:
 
 ```json
 {
@@ -158,58 +158,56 @@ Member 3 developed `tests/run_all_tests.sh`, a fully automated shell test harnes
 All measurements were empirically gathered using `scripts/benchmark.py` and visualized using `scripts/generate_graphs.py`. **Zero data points were fabricated.**
 
 ### 5.1 Test Environment & Hardware Specification
-- **Hardware Architecture**: Apple Silicon (arm64), 8-core CPU
-- **Operating System Kernel**: Darwin 24.6.0
-- **C Compiler**: Apple Clang / GCC with `-Wall -Wextra -std=c11 -pedantic -O2`
+- **Hardware Architecture**: x86_64
+- **Operating System**: Linux under WSL2
+- **Kernel**: Linux 6.18.54.1-microsoft-standard-WSL2
+- **Python Runtime**: Python 3.14.4
+- **C Compiler**: GCC with `-Wall -Wextra -std=c11 -pedantic -O2`
 - **Timer Resolution**: Sub-microsecond monotonic clock (`time.perf_counter()`)
 
 ### 5.2 Latency Statistics (50 Repeated Full Trials)
-- **Mean Wall-Clock Latency**: **10.62 ms**
-- **Median Latency**: **10.32 ms**
-- **Standard Deviation**: **±1.12 ms**
-- **Minimum Latency**: **9.75 ms**
-- **Maximum Latency**: **17.24 ms**
-- **95th Percentile (p95)**: **11.69 ms**
 
-### 5.3 Subsystem Execution Breakdown
+| Metric | Measured Value (ms) |
+| :--- | :--- |
+| **Sample Size (Trials)** | 50 |
+| **Mean Latency** | **6.05 ms** |
+| **Median Latency** | 5.33 ms |
+| **Standard Deviation** | ±1.65 ms |
+| **Minimum Latency** | 4.48 ms |
+| **Maximum Latency** | 12.22 ms |
+| **95th Percentile (p95)** | 9.88 ms |
 
-| Subsystem / Pipeline Stage | Mean Latency (ms) | Std Dev (ms) | Min (ms) | Max (ms) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Process & Environment Engine** | **10.68 ms** | ±0.43 ms | 10.15 ms | 11.89 ms |
-| **Linux Namespace Inspector** | **1.73 ms** | ±0.18 ms | 1.48 ms | 2.15 ms |
-| **Security Keyword Scanner** | **2.19 ms** | ±1.40 ms | 1.42 ms | 7.21 ms |
-| **JSON Serialization & Stream** | **10.75 ms** | ±0.28 ms | 10.29 ms | 11.45 ms |
-| **CSV Serialization & Stream** | **10.69 ms** | ±0.44 ms | 10.18 ms | 12.01 ms |
-| **Full Combined Audit** | **10.70 ms** | ±0.42 ms | 10.22 ms | 11.95 ms |
+### 5.3 Subsystem Execution Breakdown (30 Trials Each)
 
-### 5.4 Environment Table Scaling Analysis
-We evaluated how security keyword matching scales as the process environment expands from 10 to 1,000 variables:
-
-| Variable Count (N) | Mean Latency (ms) | Std Dev (ms) |
+| Subsystem / Pipeline Stage | Mean (ms) | Standard Deviation (ms) |
 | :--- | :--- | :--- |
-| **10 variables** | 1.81 ms | ±0.19 ms |
-| **50 variables** | 1.75 ms | ±0.21 ms |
-| **100 variables** | 1.75 ms | ±0.14 ms |
-| **250 variables** | 1.87 ms | ±0.17 ms |
-| **500 variables** | 2.05 ms | ±0.31 ms |
-| **1000 variables** | 2.29 ms | ±0.17 ms |
+| **Process/Env Engine** | 4.98 | ±0.43 |
+| **Namespace Inspector** | 0.84 | ±0.14 |
+| **Security Scanner** | 0.78 | ±0.18 |
+| **JSON Formatting** | 5.30 | ±0.66 |
+| **CSV Formatting** | 5.15 | ±0.51 |
+| **Full Unified Audit** | 6.74 | ±1.20 |
+
+### 5.4 Environment Scaling Performance
+
+| Variable Count | Mean Latency (ms) | Standard Deviation (ms) |
+| :--- | :--- | :--- |
+| **10 variables** | 1.01 | ±0.32 |
+| **50 variables** | 1.19 | ±0.36 |
+| **100 variables** | 1.02 | ±0.34 |
+| **250 variables** | 1.09 | ±0.27 |
+| **500 variables** | 1.42 | ±0.36 |
+| **1000 variables** | 1.67 | ±0.19 |
 
 ### 5.5 Operating Systems Theoretical Analysis
 
-1. **Process Creation Dominance**:
-   The benchmark reveals that over 85% of total runtime in the complete audit is consumed by the Process & Environment Engine (10.68 ms out of 10.70 ms). This directly illustrates the operating system cost of:
-   - Allocating Process Control Blocks (PCBs) in kernel space.
-   - Initializing virtual memory mappings and page tables.
-   - Performing `execve()`, which deallocates the existing virtual address space, loads binary sections (`.text`, `.data`, `.bss`), and sets up a new user stack with the passed environment strings.
-   - Synchronizing termination through `waitpid()`.
+1. **Process Lifecycle:** The Process/Env Engine recorded a mean of 4.98 ms, while the full unified audit recorded 6.74 ms in their respective component benchmark runs. These are separate measurements; they do not establish the percentage of total runtime attributable to process creation.
 
-2. **In-Memory Operations vs System Calls**:
-   In contrast, in-memory scanning across 1,000 environment variables required only **2.29 ms**, demonstrating that sequential cache-friendly string comparison in user space is orders of magnitude faster than kernel process lifecycle transitions.
+2. **Environment Scaling:** Scanning 1,000 variables recorded a mean of 1.67 ms in the tested environment. Intermediate measurements were not strictly monotonic, so additional controlled trials would be useful to establish the scaling trend.
 
-3. **Generated Graph Artifacts**:
-   - `docs/graphs/benchmark_execution_time.png`: Latency distribution across 50 trials.
-   - `docs/graphs/benchmark_component_breakdown.png`: Execution time per subsystem.
-   - `docs/graphs/benchmark_env_scaling.png`: Scaling curve across variable counts.
+3. **Structured Output:** JSON and CSV formatting recorded means of 5.30 ms and 5.15 ms respectively. A comparable text-output baseline is not available here, so the relative serialization overhead cannot be determined from these values alone.
+
+4. **Measurement Context:** These results were collected under Linux on WSL2. Performance may vary with host load, software versions, and system configuration.
 
 ---
 
@@ -237,7 +235,7 @@ We evaluated how security keyword matching scales as the process environment exp
    *A*: When quiet mode or structured formats (`json`/`csv`) are active, the parent sets a quiet flag. Inside the child process after `fork()` but before `execve()`, `freopen("/dev/null", "w", stdout)` redirects stdout and stderr to the null device, ensuring the parent's stdout remains 100% parseable JSON/CSV.
 
 4. **Q: What OS performance bottleneck was identified in the benchmark?**  
-   *A*: Process lifecycle management (`fork()` + `execve()` + `waitpid()`). The 8 child processes in the environment engine took ~10.68 ms, while in-memory security scanning of 1,000 variables took only ~2.29 ms.
+   *A*: Process lifecycle management (`fork()` + `execve()` + `waitpid()`). The Process/Env Engine recorded 4.98 ms and the 1,000-variable security scan recorded 1.67 ms in separate benchmark runs on Linux under WSL2.
 
 5. **Q: How does the namespace auditor inspect other processes?**  
    *A*: It reads symbolic links under `/proc/[PID]/ns/` using the `readlink()` system call. The target link format (e.g., `net:[4026531992]`) contains the namespace type and unique kernel inode number.
