@@ -1,0 +1,196 @@
+{
+  "project": "Environment Variable & Namespace Leak Auditor",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-10-14T13:20:57+0530",
+  "system": {
+    "os": "Darwin arm64",
+    "kernel": "24.6.0",
+    "auditor_pid": 27621
+  },
+  "summary": {
+    "environment_tests_total": 8,
+    "environment_tests_passed": 8,
+    "environment_tests_failed": 0,
+    "namespaces_total": 8,
+    "namespaces_matching": 0,
+    "namespaces_different": 0,
+    "namespaces_unavailable": 8,
+    "environment_variables_scanned": 48,
+    "security_findings_total": 3
+  },
+  "environment_tests": [
+    {
+      "test_id": 1,
+      "name": "Inherited Variable Propagation",
+      "description": "Check DEMO_MODE inherits from parent environment",
+      "target_variable": "DEMO_MODE",
+      "expectation": "Present (P)",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27622 exited with expected code 0"
+    },
+    {
+      "test_id": 2,
+      "name": "Child Unsetenv Removal",
+      "description": "Verify DEMO_SECRET is absent after unsetenv() in child",
+      "target_variable": "DEMO_SECRET",
+      "expectation": "Absent (A)",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27623 exited with expected code 0"
+    },
+    {
+      "test_id": 3,
+      "name": "Explicit Clean Environment",
+      "description": "Pass custom environment excluding API_TOKEN",
+      "target_variable": "API_TOKEN",
+      "expectation": "Absent (A)",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27624 exited with expected code 0"
+    },
+    {
+      "test_id": 4,
+      "name": "Negative Expectation Assertion",
+      "description": "Assert child detects unexpected variable presence",
+      "target_variable": "DEMO_MODE",
+      "expectation": "Absent (fails expectation)",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "status": "PASS",
+      "details": "Child 27625 exited with expected code 1"
+    },
+    {
+      "test_id": 5,
+      "name": "Exact Single Variable Isolation",
+      "description": "Verify clean env contains only DEMO_MODE=sanitized",
+      "target_variable": "DEMO_MODE",
+      "expectation": "Matches 'sanitized'",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27626 exited with expected code 0"
+    },
+    {
+      "test_id": 6,
+      "name": "Empty Environment Execution",
+      "description": "Verify execve with empty env array leaves child environ empty",
+      "target_variable": "(ALL)",
+      "expectation": "Empty environment",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27627 exited with expected code 0"
+    },
+    {
+      "test_id": 7,
+      "name": "Explicit Secret Exclusion",
+      "description": "Verify DEMO_SECRET is stripped when running with clean env",
+      "target_variable": "DEMO_SECRET",
+      "expectation": "Absent (A)",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "status": "PASS",
+      "details": "Child 27628 exited with expected code 0"
+    },
+    {
+      "test_id": 8,
+      "name": "Execve Failure Handling",
+      "description": "Verify process handles ENOENT for non-existent executable",
+      "target_variable": "N/A",
+      "expectation": "Exit code 42 on ENOENT",
+      "expected_exit": 42,
+      "actual_exit": 42,
+      "status": "PASS",
+      "details": "Child 27629 exited with expected code 42"
+    }
+  ],
+  "namespace_audit": {
+    "target_pid": 27620,
+    "current_pid": 27621,
+    "inspections": [
+      {
+        "namespace": "pid",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "mnt",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "net",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "ipc",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "uts",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "user",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "cgroup",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      },
+      {
+        "namespace": "time",
+        "status": "UNAVAILABLE",
+        "self_link": "N/A",
+        "target_link": "N/A",
+        "error": "No such file or directory"
+      }
+    ]
+  },
+  "security_findings": [
+    {
+      "variable": "ANTIGRAVITY_CSRF_TOKEN",
+      "matched_pattern": "TOKEN",
+      "value": "[REDACTED]",
+      "risk_level": "REVIEW REQUIRED",
+      "recommendation": "Limit secret exposure in process environment; use secrets manager or IPC."
+    },
+    {
+      "variable": "DEMO_SECRET",
+      "matched_pattern": "SECRET",
+      "value": "[REDACTED]",
+      "risk_level": "REVIEW REQUIRED",
+      "recommendation": "Limit secret exposure in process environment; use secrets manager or IPC."
+    },
+    {
+      "variable": "API_TOKEN",
+      "matched_pattern": "TOKEN",
+      "value": "[REDACTED]",
+      "risk_level": "REVIEW REQUIRED",
+      "recommendation": "Limit secret exposure in process environment; use secrets manager or IPC."
+    }
+  ]
+}

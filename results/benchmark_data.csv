@@ -1,0 +1,14 @@
+MetricGroup,Name,Parameter,Trials,MeanMs,MedianMs,StdevMs,MinMs,MaxMs,p95Ms
+RepeatedTrials,FullAudit,DefaultEnv,50,10.7914,10.7100,0.3792,10.4118,12.9270,11.2272
+Component,Process/Env Engine,-,30,10.6954,10.6905,0.2875,10.1095,11.3493,-
+Component,Namespace Inspector,-,30,1.8039,1.6615,0.5151,1.5852,4.4482,-
+Component,Security Scanner,-,30,1.6832,1.6422,0.1087,1.5615,1.9667,-
+Component,JSON Formatting,-,30,10.7556,10.7423,0.2146,10.4622,11.5078,-
+Component,CSV Formatting,-,30,10.6751,10.6271,0.2432,10.4123,11.6346,-
+Component,Full Unified Audit,-,30,10.7377,10.7054,0.2589,10.2613,11.4544,-
+EnvScaling,SecurityScan,10,20,2.3849,-,1.2153,1.6149,4.9793,-
+EnvScaling,SecurityScan,50,20,1.8158,-,0.1656,1.6189,2.2125,-
+EnvScaling,SecurityScan,100,20,1.7980,-,0.1116,1.6731,2.0753,-
+EnvScaling,SecurityScan,250,20,1.8513,-,0.0956,1.7295,2.0406,-
+EnvScaling,SecurityScan,500,20,2.0264,-,0.1524,1.8704,2.4464,-
+EnvScaling,SecurityScan,1000,20,2.2504,-,0.1126,2.0916,2.5132,-

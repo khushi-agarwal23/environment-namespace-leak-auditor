@@ -1,0 +1,150 @@
+TEST 1: Namespace inspection
+
+===== NAMESPACE AUDIT =====
+Current PID: 24984
+Compared PID: 24978
+
+pid: pid:[4026532225] | pid:[4026532225]
+Result: SAME
+
+mnt: mnt:[4026532222] | mnt:[4026532222]
+Result: SAME
+
+net: net:[4026531840] | net:[4026531840]
+Result: SAME
+
+ipc: ipc:[4026532224] | ipc:[4026532224]
+Result: SAME
+
+uts: uts:[4026532223] | uts:[4026532223]
+Result: SAME
+
+user: user:[4026531837] | user:[4026531837]
+Result: SAME
+
+cgroup: cgroup:[4026532226] | cgroup:[4026532226]
+Result: SAME
+
+time: time:[4026531834] | time:[4026531834]
+Result: SAME
+
+
+===== SECURITY AUDIT =====
+Variable: GITHUB_TOKEN
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Variable: GITHUB_CODESPACE_TOKEN
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Total findings: 2
+TEST 2: Sensitive variables
+
+===== NAMESPACE AUDIT =====
+Current PID: 24985
+Compared PID: 24978
+
+pid: pid:[4026532225] | pid:[4026532225]
+Result: SAME
+
+mnt: mnt:[4026532222] | mnt:[4026532222]
+Result: SAME
+
+net: net:[4026531840] | net:[4026531840]
+Result: SAME
+
+ipc: ipc:[4026532224] | ipc:[4026532224]
+Result: SAME
+
+uts: uts:[4026532223] | uts:[4026532223]
+Result: SAME
+
+user: user:[4026531837] | user:[4026531837]
+Result: SAME
+
+cgroup: cgroup:[4026532226] | cgroup:[4026532226]
+Result: SAME
+
+time: time:[4026531834] | time:[4026531834]
+Result: SAME
+
+
+===== SECURITY AUDIT =====
+Variable: API_TOKEN
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Variable: PASSWORD
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Total findings: 2
+TEST 3: Normal variables
+
+===== NAMESPACE AUDIT =====
+Current PID: 24986
+Compared PID: 24978
+
+pid: pid:[4026532225] | pid:[4026532225]
+Result: SAME
+
+mnt: mnt:[4026532222] | mnt:[4026532222]
+Result: SAME
+
+net: net:[4026531840] | net:[4026531840]
+Result: SAME
+
+ipc: ipc:[4026532224] | ipc:[4026532224]
+Result: SAME
+
+uts: uts:[4026532223] | uts:[4026532223]
+Result: SAME
+
+user: user:[4026531837] | user:[4026531837]
+Result: SAME
+
+cgroup: cgroup:[4026532226] | cgroup:[4026532226]
+Result: SAME
+
+time: time:[4026531834] | time:[4026531834]
+Result: SAME
+
+
+===== SECURITY AUDIT =====
+Total findings: 0
+No sensitive-looking variables detected.
+TEST 4: Invalid PID
+Invalid PID
+TEST 5: Nonexistent PID
+
+===== NAMESPACE AUDIT =====
+Current PID: 24988
+Compared PID: 99999999
+
+pid: UNAVAILABLE (No such file or directory)
+mnt: UNAVAILABLE (No such file or directory)
+net: UNAVAILABLE (No such file or directory)
+ipc: UNAVAILABLE (No such file or directory)
+uts: UNAVAILABLE (No such file or directory)
+user: UNAVAILABLE (No such file or directory)
+cgroup: UNAVAILABLE (No such file or directory)
+time: UNAVAILABLE (No such file or directory)
+
+===== SECURITY AUDIT =====
+Variable: GITHUB_TOKEN
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Variable: GITHUB_CODESPACE_TOKEN
+Value: [REDACTED]
+Level: REVIEW REQUIRED
+Recommendation: Limit secret exposure.
+
+Total findings: 2
+All test scenarios executed.

@@ -35,6 +35,10 @@
 *.i*86
 *.x86_64
 *.hex
+inspector
+auditor
+member2
+leak_auditor
 
 # Debug files
 *.dSYM/

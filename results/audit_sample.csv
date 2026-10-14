@@ -1,0 +1,23 @@
+Section,Identifier,Property,Value,Status,Recommendation
+Metadata,Header,Timestamp,2026-10-14T13:20:57+0530,INFO,-
+Metadata,Header,OS,Darwin arm64,INFO,-
+Metadata,Header,Kernel,24.6.0,INFO,-
+EnvironmentTest,TEST_1,Inherited Variable Propagation,Child 27622 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_2,Child Unsetenv Removal,Child 27623 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_3,Explicit Clean Environment,Child 27624 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_4,Negative Expectation Assertion,Child 27625 exited with expected code 1,PASS,-
+EnvironmentTest,TEST_5,Exact Single Variable Isolation,Child 27626 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_6,Empty Environment Execution,Child 27627 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_7,Explicit Secret Exclusion,Child 27628 exited with expected code 0,PASS,-
+EnvironmentTest,TEST_8,Execve Failure Handling,Child 27629 exited with expected code 42,PASS,-
+Namespace,pid,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,mnt,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,net,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,ipc,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,uts,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,user,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,cgroup,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+Namespace,time,LinkComparison,Self: N/A | Target: N/A,UNAVAILABLE,-
+SecurityLeak,ANTIGRAVITY_CSRF_TOKEN,Pattern: TOKEN,[REDACTED],REVIEW REQUIRED,Limit secret exposure in process environment; use secrets manager or IPC.
+SecurityLeak,DEMO_SECRET,Pattern: SECRET,[REDACTED],REVIEW REQUIRED,Limit secret exposure in process environment; use secrets manager or IPC.
+SecurityLeak,API_TOKEN,Pattern: TOKEN,[REDACTED],REVIEW REQUIRED,Limit secret exposure in process environment; use secrets manager or IPC.
